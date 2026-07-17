@@ -24,12 +24,12 @@ args = "Bot Telegram"
 name = "Bot Telegram"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python telegram_bot/main.py"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m telegram_bot.main"
 
 [agent]
 stack = "PNPM_WORKSPACE"
