@@ -1,0 +1,78 @@
+Je veux créer un bot Telegram en Python qui surveille un canal Telegram et analyse des messages de signaux.
+
+Objectif du bot :
+Le bot doit surveiller un canal Telegram, détecter les nouveaux signaux, analyser la ligne qui contient les symboles de cartes (♠ ♣ ♦ ♥), puis m’envoyer des alertes selon une règle précise.
+
+Fonctionnement :
+
+1) Connexion Telegram :
+- Utiliser Python.
+- Utiliser Telethon pour lire les messages d’un canal Telegram.
+- Prévoir une configuration avec API_ID, API_HASH et les informations nécessaires.
+- Utiliser des variables d’environnement pour protéger les clés.
+
+2) Analyse des messages :
+Les messages ressemblent à ceci :
+
+└♠♣♦
+
+Le bot doit :
+- détecter automatiquement la partie contenant les symboles ♠ ♣ ♦ ♥ ;
+- extraire les cartes présentes ;
+- ignorer les autres textes du message.
+
+3) Système de surveillance :
+Le bot doit suivre uniquement la carte ♠ (pique).
+
+Règle :
+- Si un signal ne contient pas ♠, augmenter un compteur.
+- Si plusieurs signaux successifs ne contiennent pas ♠, garder le nombre d’absences en mémoire.
+- Dès qu’un nouveau signal contient ♠, envoyer une notification.
+
+Exemple :
+
+Signal 1 : ♣♦♥
+=> compteur = 1
+
+Signal 2 : ♣♦
+=> compteur = 2
+
+Signal 3 : ♠♣♦
+=> envoyer :
+
+"🔔 Pique détecté !
+♠ est apparu après 2 signaux sans pique."
+
+Puis remettre le compteur à zéro.
+
+4) Notifications :
+Le bot doit envoyer les alertes dans mon message privé Telegram.
+
+Créer des messages propres avec :
+- nombre de signaux sans pique ;
+- heure du signal ;
+- cartes détectées.
+
+5) Historique :
+Ajouter une sauvegarde des données :
+- nombre d’absences de ♠ ;
+- dernier signal analysé ;
+- date et heure.
+
+Utiliser SQLite pour garder l’historique même après redémarrage.
+
+6) Sécurité et stabilité :
+- Ajouter une gestion des erreurs.
+- Le bot doit continuer à fonctionner après une déconnexion.
+- Ajouter des logs clairs dans la console.
+- Organiser le code en plusieurs fichiers si nécessaire.
+
+7) Interface :
+Créer un système de commandes Telegram :
+/start : démarrer le bot
+/status : voir l’état actuel
+/reset : remettre le compteur à zéro
+/history : voir les derniers signaux analysés
+
+Je veux un code propre, professionnel, bien commenté, prêt à fonctionner sur Replit.
+Explique-moi aussi étape par étape comment configurer les variables et lancer le bot.
