@@ -88,6 +88,15 @@ async def process_result(
             cards_str,
             new_count,
         )
+        game_info = f"Jeu #{game_number}" if game_number else "Jeu inconnu"
+        absence_msg = (
+            f"⏳ <b>Pas de pique</b>\n\n"
+            f"🎮 {game_info}\n"
+            f"🃏 Cartes sorties : <code>{cards_str}</code>\n"
+            f"📊 Absences de ♠ : <b>{new_count}</b>\n"
+            f"🕐 Heure : {timestamp}"
+        )
+        await bot.send_message(my_chat_id, absence_msg, parse_mode="HTML")
 
 
 async def start_monitor(bot, my_chat_id: int) -> None:
