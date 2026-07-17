@@ -7,8 +7,10 @@ Lance simultanément :
 import asyncio
 import logging
 import sys
+from pathlib import Path
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from telegram_bot import database as db
@@ -18,6 +20,8 @@ from telegram_bot.monitor import start_monitor
 
 
 # ── Logging ──────────────────────────────────────────────────────────────────
+
+Path("data").mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,7 +42,7 @@ async def main() -> None:
     logger.info("🚀 Démarrage du bot…")
 
     # Créer le bot aiogram
-    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
     dp.include_router(router)
 
