@@ -1,0 +1,34 @@
+name: Bot Telegram 24/7
+
+on:
+  schedule:
+    - cron: '0 */5 * * *'   # redémarre toutes les 5 heures
+  workflow_dispatch:         # démarrage manuel possible
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install telethon aiogram aiosqlite
+
+      - name: Run bot
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MY_CHAT_ID: ${{ secrets.MY_CHAT_ID }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          CHANNEL_USERNAME: ${{ secrets.CHANNEL_USERNAME }}
+        run: python -m telegram_bot.main
