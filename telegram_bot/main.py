@@ -16,6 +16,7 @@ from aiogram.enums import ParseMode
 from telegram_bot import database as db
 from telegram_bot.config import BOT_TOKEN, MY_CHAT_ID
 from telegram_bot.handlers import router
+from telegram_bot.health import start_health_server
 from telegram_bot.monitor import start_monitor
 
 
@@ -40,6 +41,10 @@ async def main() -> None:
     # Initialiser la base de données
     db.init_db()
     logger.info("🚀 Démarrage du bot…")
+
+    # Serveur HTTP pour les health checks Replit Deployments
+    import os
+    start_health_server(port=int(os.environ.get("PORT", 8080)))
 
     # Créer le bot aiogram
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
