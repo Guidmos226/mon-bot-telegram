@@ -101,9 +101,10 @@ async def start_monitor(bot, my_chat_id: int) -> None:
             @client.on(events.NewMessage(chats=CHANNEL_USERNAME))
             async def handler(event):
                 text: str = event.message.message or ""
+                logger.info("📨 Message brut reçu : %r", text[:200])
                 result = parse_game_message(text)
                 if result is None:
-                    logger.debug("Message ignoré (format inconnu) : %.60s", text[:60])
+                    logger.warning("⚠️ Format non reconnu — message ignoré : %r", text[:200])
                     return
 
                 game_number, cards = result
