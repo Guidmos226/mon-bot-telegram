@@ -98,6 +98,27 @@ async def start_monitor(bot, my_chat_id: int) -> None:
             await client.start()
             logger.info("✅ Telethon connecté — surveillance : %s", CHANNEL_USERNAME)
 
+            # ── Diagnostic : vérifier l'accès au canal ──────────────────────
+            try:
+                entity = await client.get_entity(CHANNEL_USERNAME)
+                logger.info(
+                    "📡 Canal trouvé : %s (id=%s, type=%s)",
+                    getattr(entity, 'title', '?'),
+                    getattr(entity, 'id', '?'),
+                    type(entity).__name__,
+                )
+                # Récupérer les 3 derniers messages pour confirmer la lecture
+                messages = await client.get_messages(entity, limit=3)
+                if messages:
+                    logger.info("📋 Derniers messages du canal (%d) :", len(messages))
+                    for m in messages:
+                        logger.info("  → %r", (m.message or "")[:150])
+                else:
+                    logger.warning("⚠️ Aucun message récupéré depuis le canal.")
+            except Exception as diag_err:
+                logger.error("❌ Impossible d'accéder au canal %s : %s", CHANNEL_USERNAME, diag_err)
+            # ────────────────────────────────────────────────────────────────
+
             @client.on(events.NewMessage(chats=CHANNEL_USERNAME))
             async def handler(event):
                 text: str = event.message.message or ""
