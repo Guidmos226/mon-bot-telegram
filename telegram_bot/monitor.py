@@ -95,7 +95,17 @@ async def start_monitor(bot, my_chat_id: int) -> None:
             client = TelegramClient(
                 StringSession(SESSION_STRING), API_ID, API_HASH
             )
-            await client.start()
+            await client.connect()
+            if not await client.is_user_authorized():
+                logger.error("❌ SESSION_STRING expirée ou invalide — régénérer le token.")
+                await bot.send_message(
+                    my_chat_id,
+                    "❌ <b>SESSION_STRING expirée</b>\n\n"
+                    "Le token Telethon n'est plus valide.\n"
+                    "Il faut en générer un nouveau et mettre à jour le secret GitHub.",
+                    parse_mode="HTML",
+                )
+                return
             logger.info("✅ Telethon connecté — surveillance : %s", CHANNEL_USERNAME)
 
             # ── Diagnostic : vérifier l'accès au canal ──────────────────────
