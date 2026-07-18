@@ -1,66 +1,65 @@
 """
-Analyse des messages de signaux.
+Analyse des messages du canal baccaratstat.
 
-Format des messages du canal :
-  - Message de PRÉDICTION (à ignorer) :
-      ┌#n905 #m4 #_S
-      ├          3      _    5   ...
-      ├♠ 99.9% ...
-      ├♣ 99.9% ...
-      ├♦ 99.9% ...
-      ├♥ 33.3% ...
-      (pas de ligne └ en bas)
+Format des messages :
+  ⏰#N1019. 0(2♥️2♣️6♥️) - ▶ 0(A♦️9♥️)
 
-  - Message de RÉSULTAT (à traiter) :
-      ┌#n899 #m58
-      ├          3      _    5   ...
-      ├♠ 66.6% ...
-      ...
-      └♠♣♥          ← ligne résultat : cartes réellement sorties
+  - #N1019  → numéro de jeu
+  - 0(2♥️2♣️6♥️) → score(cartes JOUEUR)  ← on regarde ici
+  - ▶ 0(A♦️9♥️)  → score(cartes banquier) ← ignoré
 
-Le bot extrait uniquement les cartes de la ligne └ et ignore
-les symboles de cartes dans les lignes ├ (statistiques/prédictions).
+Logique par paire (impair + pair) :
+  - Jeux N1019 + N1020 = signal #1
+  - Jeux N1021 + N1022 = signal #2 ...
+  - Si le JOUEUR a ♠ dans AU MOINS UN des deux jeux → signal "avec pique"
+  - Si le JOUEUR n'a PAS ♠ dans les DEUX jeux      → signal "sans pique"
+
+Alerte : dès que ♠ apparaît après au moins 1 signal sans pique.
 """
 import re
 
-CARD_SYMBOLS: frozenset[str] = frozenset("♠♣♦♥")
 SPADE = "♠"
+CARD_SYMBOLS = "♠♣♦♥"
 
-# Ligne de résultat : commence par └ suivi de symboles de cartes
-_RESULT_LINE_RE = re.compile(r"^└([♠♣♦♥]+)", re.MULTILINE)
+# Numéro de jeu : #N1019 ou #n1019
+_GAME_NUM_RE = re.compile(r"#[Nn](\d+)")
+
+# Cartes du joueur : premier groupe (...) après le numéro de jeu
+# Format : "#N1019. <score>(<cartes joueur>) - ▶ <score>(<cartes banquier>)"
+_PLAYER_CARDS_RE = re.compile(r"#[Nn]\d+[^(]*\(([^)]+)\)")
 
 
-def is_result_message(text: str) -> bool:
+def parse_game_message(text: str) -> tuple[int, list[str]] | None:
     """
-    Vrai si le message contient une ligne de résultat (└♠♣♦♥…).
-    Ces messages indiquent les cartes réellement sorties à la fin du jeu.
+    Extrait (numéro_jeu, cartes_joueur) depuis un message du canal.
+    Retourne None si le message ne correspond pas au format attendu.
     """
-    return bool(_RESULT_LINE_RE.search(text))
+    num_match = _GAME_NUM_RE.search(text)
+    if not num_match:
+        return None
+
+    game_number = int(num_match.group(1))
+
+    cards_match = _PLAYER_CARDS_RE.search(text)
+    if not cards_match:
+        return None
+
+    raw_cards = cards_match.group(1)
+    # Filtre les symboles de cartes (ignore chiffres, lettres, emoji variante ️)
+    cards = [ch for ch in raw_cards if ch in CARD_SYMBOLS]
+
+    return game_number, cards
 
 
-def extract_result_cards(text: str) -> list[str]:
-    """
-    Extrait les cartes de la ligne résultat (└…).
-    Retourne une liste ordonnée des symboles présents.
-    Retourne [] si aucune ligne résultat trouvée.
-    """
-    match = _RESULT_LINE_RE.search(text)
-    if not match:
-        return []
-    return [ch for ch in match.group(1) if ch in CARD_SYMBOLS]
-
-
-def extract_game_number(text: str) -> str | None:
-    """Extrait le numéro de jeu depuis la ligne d'en-tête (ex: #n905)."""
-    match = re.search(r"#n(\d+)", text)
-    return match.group(1) if match else None
-
-
-def has_spade(cards: list[str]) -> bool:
-    """Vérifie si ♠ est présent dans la liste des cartes du résultat."""
+def player_has_spade(cards: list[str]) -> bool:
+    """Vrai si le joueur a ♠ dans ses cartes."""
     return SPADE in cards
 
 
+def is_odd_game(game_number: int) -> bool:
+    """Jeu impair → début d'un nouveau signal."""
+    return game_number % 2 == 1
+
+
 def cards_to_str(cards: list[str]) -> str:
-    """Convertit la liste de cartes en chaîne lisible."""
-    return "".join(cards) if cards else "aucune"
+    return "".join(cards) if cards else "—"
