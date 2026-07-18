@@ -101,22 +101,40 @@ async def start_monitor(bot, my_chat_id: int) -> None:
             # ── Diagnostic : vérifier l'accès au canal ──────────────────────
             try:
                 entity = await client.get_entity(CHANNEL_USERNAME)
-                logger.info(
-                    "📡 Canal trouvé : %s (id=%s, type=%s)",
-                    getattr(entity, 'title', '?'),
-                    getattr(entity, 'id', '?'),
-                    type(entity).__name__,
-                )
-                # Récupérer les 3 derniers messages pour confirmer la lecture
+                title = getattr(entity, 'title', '?')
+                logger.info("📡 Canal trouvé : %s (type=%s)", title, type(entity).__name__)
+
+                # Récupérer les 3 derniers messages
                 messages = await client.get_messages(entity, limit=3)
+                msg_preview = ""
                 if messages:
-                    logger.info("📋 Derniers messages du canal (%d) :", len(messages))
+                    previews = []
                     for m in messages:
-                        logger.info("  → %r", (m.message or "")[:150])
+                        txt = (m.message or "").strip()[:100]
+                        previews.append(f"  • <code>{txt}</code>")
+                        logger.info("  Dernier msg → %r", txt)
+                    msg_preview = "\n".join(previews)
                 else:
+                    msg_preview = "  ⚠️ Aucun message récupéré"
                     logger.warning("⚠️ Aucun message récupéré depuis le canal.")
+
+                await bot.send_message(
+                    my_chat_id,
+                    f"🤖 <b>Bot démarré</b>\n\n"
+                    f"📡 Canal : <b>{title}</b> ({CHANNEL_USERNAME})\n"
+                    f"✅ Accès confirmé\n\n"
+                    f"📋 <b>3 derniers messages :</b>\n{msg_preview}",
+                    parse_mode="HTML",
+                )
             except Exception as diag_err:
                 logger.error("❌ Impossible d'accéder au canal %s : %s", CHANNEL_USERNAME, diag_err)
+                await bot.send_message(
+                    my_chat_id,
+                    f"🤖 <b>Bot démarré</b>\n\n"
+                    f"❌ <b>Erreur accès canal</b> {CHANNEL_USERNAME} :\n"
+                    f"<code>{diag_err}</code>",
+                    parse_mode="HTML",
+                )
             # ────────────────────────────────────────────────────────────────
 
             @client.on(events.NewMessage(chats=CHANNEL_USERNAME))
